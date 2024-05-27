@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="icu.dbkx.opnmb.generator.mapper.PieceMapper">
+
+    <resultMap id="BaseResultMap" type="icu.dbkx.opnmb.generator.entity.Piece">
+            <id property="piece_id" column="piece_id" jdbcType="INTEGER"/>
+            <result property="quote_id" column="quote_id" jdbcType="VARCHAR"/>
+            <result property="biscuit_id" column="biscuit_id" jdbcType="VARCHAR"/>
+            <result property="category_name" column="category_name" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="timestamp" column="timestamp" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        piece_id,quote_id,biscuit_id,
+        category_name,content,timestamp
+    </sql>
+</mapper>

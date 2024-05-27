@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>OPnmb - Login</title>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<form onsubmit="login(event)">
+    <label style="text-align: center"> <h2>OP匿名版标准用户登录</h2></label><br>
+    <label for="user_id" style="font-size: 20px">User id:</label>
+    <input type="text" id="user_id" name="user_id" required><br>
+    <label for="password" style="font-size: 20px">Password:</label>
+    <input type="password" id="password" name="password" required><br>
+    <button type="submit">立即登录</button>
+    <div id="errmsg"></div>
+<!--    <p th:if="${param.error}" style="color: red;">Invalid username and password.</p>-->
+</form>
+
+<script>
+    function login() {
+        event.preventDefault();
+        var user_id = document.getElementById("user_id").value;
+        var password = document.getElementById("password").value;
+        var loginDto = {
+            type: "user_id",
+            user_id: user_id,
+            password: password
+        };
+        // $.post("/api/user/login",JSON.stringify(loginDto),function(data) {
+        //     console.log(data);
+        //     if (data.code !== 200) {
+        //         $("#errmsg").text(data.msg);
+        //     } else {
+        //         localStorage.setItem("token", data.data.token);
+        //         window.location.href = "/view/index";
+        //     }
+        // });
+        $.ajax({
+            url: "/api/user/login",
+            type: "POST",
+            data: JSON.stringify(loginDto),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data) {
+                console.log(data);
+                if (data.code !== 200) {
+                    $("#errmsg").text(data.msg);
+                } else {
+                    localStorage.setItem("nickname", data.data.nickname);
+                    if(data.data.biscuit_id !== null)
+                        localStorage.setItem("biscuit_id", data.data.biscuit_id);
+                    localStorage.setItem("token", data.data.token);
+                    location.href = "/view/index";
+                    // location.reload();
+                }
+            }
+        });
+    }
+</script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    form {
+        background-color: #fff;
+        padding: 80px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+    }
+    input[type="text"], input[type="password"] {
+        width: 96%;
+        padding: 5px;
+        font-size: 20px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button{
+        font-size: 20px;
+        width: 100%;
+        border-radius: 5px;
+        border: none;
+        color: #fff;
+        background-color: #007BFF;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</body>
+</html>

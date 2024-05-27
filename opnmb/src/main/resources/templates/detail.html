@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OPnmb - OP匿名版</title>
+  <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<div class="bordered">
+  <h1 id="web_title">
+    OP匿名版 - 内容详情
+  </h1>
+</div>
+
+<table>
+  <tr>
+    <td>
+      <div class="bordered">
+        <label><h2>用户系统</h2></label>
+        <div id="unlogged">
+          <a href="/view/login">登录</a>
+          <a href="/view/register">注册</a>
+          <button id="refreash_log_status">刷新登录状态</button>
+        </div>
+        <div id="logged">
+
+        </div>
+
+      </div>
+    </td>
+    <td>
+      <div class="bordered" style="width:766px">
+        <button id="reply_button">添加新回复</button>
+        <form id="reply_form">
+            <textarea id="content" style="font-size: 20px; width: 100%; height: 100px"></textarea>
+            <button type="submit">提交</button>
+        </form>
+        <div id="forum">
+
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<script>
+  var page = 1;
+  var batch_size = 10;
+  var isLoading = false;
+  var cur_piece_id;
+
+  $(document).ready(function () {
+    var urlParams = new URLSearchParams(window.location.search);
+    cur_piece_id = urlParams.get('piece_id');
+    $("#reply_form").hide();
+    $.ajax({
+      url: "/api/piece/get_thread/" + cur_piece_id + "?page=" + page + "&batch_size=" + batch_size,
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      success: function(data) {
+        console.log(data);
+        $.each(data.data, function (index, piece) {
+          $('#forum').append('<div class="bordered" style="padding: 10px">No.' + piece.piece_id + ' ' + piece.biscuit_id + ' ' + piece.category_name + ' ' + piece.timestamp + '<br><div class="piece_content">' + piece.content + '</div></div>');
+        });
+      }
+    });
+    $("#reply_button").click(function () {
+      $("#reply_form").show();
+    });
+    $("#reply_form").submit(function (event) {
+      event.preventDefault();
+      var quote_id = cur_piece_id;
+      var content = $("#content").val();
+      var replyDto = {
+        quote_id: quote_id,
+        content: content
+      };
+      $.ajax({
+        url: "/api/piece/reply",
+        type: "POST",
+        data: JSON.stringify(replyDto),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        headers: {
+          'Authorization': localStorage.getItem("token")
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.code !== 200) {
+            alert(data.msg);
+          } else {
+            alert("回复成功");
+            location.reload();
+          }
+        }
+      });
+    });
+  });
+
+  $("#web_title").click(function () {
+    location.href = "/view/index";
+  });
+
+  $('#forum').on('wheel', function(e) {
+    if (e.originalEvent.deltaY > 0) {
+      if (!isLoading) {
+        isLoading = true;
+        page++;
+        $.get("/api/piece/get_thread/" + cur_piece_id + "?page=" + page + "&batch_size=" + batch_size, function (data) {
+          $.each(data.data, function (index, piece) {
+            $('#forum').append('<div class="bordered" style="padding: 10px">No.' + piece.piece_id + ' ' + piece.biscuit_id + ' ' + piece.category_name + ' ' + piece.timestamp + '<br><div class="piece_content">' + piece.content + '</div></div>');
+          });
+          isLoading = false;
+        });
+      }
+    }
+  });
+
+  $("#refreash_log_status").click(function () {
+    if(localStorage.getItem("token") == null) {
+      $("#unlogged").show();
+      alert("没有缓存您的登录信息，请登录");
+    }else{
+      $("#logged").show();
+      if(localStorage.getItem("nickname") !=null){
+        $("#logged").append("<a>欢迎你，"+localStorage.getItem("nickname")+"<a>");
+        $("#logged").append("<button id='logout'>登出</button><br>");
+        $("#logout").click(function () {
+          localStorage.removeItem("token");
+          localStorage.removeItem("nickname");
+          localStorage.removeItem("biscuit_id");
+          $("#logged").hide();
+          $("#unlogged").show();
+          location.reload();
+        });
+      }
+      if(localStorage.getItem("biscuit_id") !=null) {
+        $("#logged").append("<a>当前饼干："+localStorage.getItem("biscuit_id")+"</a><br>");
+      }
+      $("#logged").append("<a href=\"/view/biscuit\" style='font-size: 20px'>饼干管理</a>")
+      $("#unlogged").hide();
+    }
+  });
+
+</script>
+
+<style>
+  td {
+    position: relative;
+    top: 50%;
+  }
+  .bordered {
+    border: 1px solid black;
+    padding: 5px;
+    margin: 5px;
+  }
+  #reply_form {
+    padding: 10px;
+  }
+  .piece_content:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  #reply_button {
+    width:30%;
+  }
+  #logout {
+    background-color: #ea1632;
+    cursor: pointer;
+  }
+  #logout:hover {
+    background-color: #b00f26;
+  }
+  button{
+    font-size: 20px;
+    width: 100%;
+    border-radius: 5px;
+    border: none;
+    color: #fff;
+    background-color: #007BFF;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+</style>
+</body>
+</html>

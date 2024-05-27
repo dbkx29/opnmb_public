@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OPnmb - OP匿名版</title>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<div class="bordered">
+    <h1 id="web_title">
+        OP匿名版 - 自由交流区
+    </h1>
+</div>
+
+<table>
+    <tr>
+        <td>
+            <div class="bordered">
+                <label><h2>可用板块</h2></label>
+                <div id="categoryList"></div>
+            </div>
+            <div class="bordered">
+                <label><h2>用户系统</h2></label>
+                <div id="unlogged">
+                    <a href="/view/login">登录</a>
+                    <a href="/view/register">注册</a>
+                    <button id="refreash_log_status">刷新登录状态</button>
+                </div>
+                <div id="logged">
+
+                </div>
+
+            </div>
+        </td>
+        <td>
+            <div class="bordered" style="width:766px">
+                <div class="welcome_info">
+                    <h2>欢迎来到OP匿名版</h2>
+                    <p>OP匿名版是一个前台匿名，后台实名的论坛，你可以在这里发表你的观点，也可以在这里看到别人的观点。</p>
+                    <p>本站不存在私信功能，用户发言以"饼干"这一发言凭证进行区别。</p>
+                    <p>请遵守法律法规，不要发表违法言论。</p>
+                </div>
+                    <button id="post_button">添加新串</button>
+                    <form id="post_form">
+                        <textarea id="content" style="font-size: 20px; width: 100%; height: 100px"></textarea>
+                        <button type="submit">提交</button>
+                    </form>
+                <div id="forum">
+
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<script>
+    var page = 1;
+    var batch_size = 10;
+    var isLoading = false;
+    var cur_category = "";
+
+    $("#web_title").click(function () {
+        $(".welcome_info").show();
+        $("#post_button").hide();
+        $("#post_form").hide();
+        $('#forum').empty();
+    });
+
+    $(document).ready(function() {
+        $("#post_form").hide();
+        $("#post_button").hide();
+        $("#post_button").click(function () {
+            $("#post_form").show();
+        });
+        $("#post_form").submit(function () {
+            event.preventDefault();
+            var content = document.getElementById("content").value;
+            var postDto = {
+                category_name: cur_category,
+                content: content
+            };
+            console.log(postDto);
+            $.ajax({
+                url: "/api/piece/post",
+                type: "POST",
+                data: JSON.stringify(postDto),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                headers: {
+                    'Authorization': localStorage.getItem("token")
+                },
+                success: function(data) {
+                    console.log(data);
+                    if (data.code !== 200) {
+                        alert(data.msg);
+                    } else {
+                        alert("发表成功");
+                        location.reload();
+                    }
+                }
+            });
+        });
+    });
+    function content_get(){
+        $.get("/api/piece/get_category/" + cur_category+"?page=" +page+"&batch_size="+batch_size, function (data) {
+            console.log(data);
+            $.each(data.data, function (index, piece) {
+                console.log(piece)
+                $('#forum').append('<div class="bordered" style="padding: 10px">No.' + piece.piece_id + ' ' + piece.biscuit_id + ' '+ piece.category_name+' ' + piece.timestamp + '<br>' +
+                    '<div class="piece_content">' + piece.content + '</div></div>');
+                $(".piece_content").on("click",function () {
+                    var piece_id = $(this).parent().text().split(" ")[0].substring(3);
+                    location.href = "/view/detail?piece_id="+piece_id;
+                });
+            });
+        });
+    }
+
+
+    $.get("/api/category/list", function (data) {
+        console.log(data);
+        $.each(data.data, function (index, category) {
+            $('#categoryList').append('<a class="category_guide">' + category.category_name + '</a><br>');
+        });
+        $(".category_guide").click(function () {
+            $(".welcome_info").hide();
+            // console.log("click");
+            $("#post_button").show();
+            $('#forum').empty();
+            page = 1;
+            cur_category = $(this).text();
+
+            content_get();
+        });
+    });
+
+
+    $('#forum').on('wheel', function(e) {
+        if (e.originalEvent.deltaY > 0) {
+            if (!isLoading) {
+                isLoading = true;
+                page++;
+
+                content_get();
+            }
+        }
+    });
+
+    $("#refreash_log_status").click(function () {
+        if(localStorage.getItem("token") == null) {
+            $("#unlogged").show();
+            alert("没有缓存您的登录信息，请登录");
+        }else{
+            $("#logged").show();
+            if(localStorage.getItem("nickname") !=null){
+                $("#logged").append("<a>欢迎你，"+localStorage.getItem("nickname")+"<a>");
+                $("#logged").append("<button id='logout'>登出</button><br>");
+                $("#logout").click(function () {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("nickname");
+                    localStorage.removeItem("biscuit_id");
+                    $("#logged").hide();
+                    $("#unlogged").show();
+                    location.reload();
+                });
+            }
+            if(localStorage.getItem("biscuit_id") !=null) {
+                $("#logged").append("<a>当前饼干："+localStorage.getItem("biscuit_id")+"</a><br>");
+            }
+            $("#logged").append("<a href=\"/view/biscuit\" style='font-size: 20px'>饼干管理</a>")
+            $("#unlogged").hide();
+        }
+    });
+
+
+
+
+</script>
+
+<style>
+    td {
+        position: relative;
+        top: 50%;
+    }
+    .bordered {
+        border: 1px solid black;
+        padding: 5px;
+        margin: 5px;
+    }
+    .category_guide {
+        color: #39c5bb;
+        text-underline-offset: auto;
+        text-underline: #39c5bb;
+        display: block;
+        height: 12px;
+        margin: 10px;
+        width: 120px;
+    }
+    .category_guide:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .piece_content:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    #logout {
+        background-color: #ea1632;
+        cursor: pointer;
+    }
+    #logout:hover {
+        background-color: #b00f26;
+    }
+    button{
+        font-size: 20px;
+        width: 100%;
+        border-radius: 5px;
+        border: none;
+        color: #fff;
+        background-color: #007BFF;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</body>
+</html>

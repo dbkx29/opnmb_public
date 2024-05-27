@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OPnmb - Biscuit</title>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+</head>
+<body>
+<div class="bordered">
+    <h1 id="web_title">
+        OP匿名版 - 饼干管理
+    </h1>
+</div>
+<table>
+    <tr>
+        <td>
+            <div class="bordered">
+                <label><h2>用户系统</h2></label>
+                <div id="unlogged">
+                    <a href="/view/login">登录</a>
+                    <a href="/view/register">注册</a>
+                    <button id="refreash_log_status">刷新登录状态</button>
+                </div>
+                <div id="logged">
+
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="bordered" style="width:766px">
+                <button id="get_new_biscuit">领取饼干</button>
+                <table id="biscuit_list" class="bordered">
+                    <thead>
+                    <tr>
+                        <th>饼干</th>
+                        <th>创建时间</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Rows will be added here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="errmsg"></div>
+        </td>
+    </tr>
+</table>
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "/api/biscuit/list",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            headers: {
+                'Authorization': localStorage.getItem("token")
+            },
+            success: function(data) {
+                console.log(data);
+                if (data.code !== 200) {
+                    $("#errmsg").text(data.msg);
+                } else {
+                    $.each(data.data, function (index, biscuit) {
+                        var tr = $("<tr id='biscuit_row' class='bordered'></tr>");
+                        tr.append("<td>"+biscuit.biscuit_id+"</td>");
+                        tr.append("<td>"+biscuit.timestamp+"</td>");
+                        tr.append("<td><button id='set_biscuit_"+biscuit.biscuit_id+"'>设为当前饼干</button></td>");
+                        tr.append("<td><button class='delete_biscuit' id='delete_biscuit_"+biscuit.biscuit_id+"'>删除饼干</button></td>");
+                        $("#biscuit_list tbody").append(tr);
+                    });
+                }
+            }
+        });
+    });
+
+    $("#get_new_biscuit").click(function () {
+        $.ajax({
+            url: "/api/biscuit/get",
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            headers: {
+                'Authorization': localStorage.getItem("token")
+            },
+            success: function(data) {
+                console.log(data);
+                if (data.code !== 200) {
+                    $("#errmsg").text(data.msg);
+                } else {
+                    location.reload();
+                }
+            },
+            error: function(data) {
+                console.log(data);
+                $("#errmsg").text(data.msg);
+            }
+        });
+    });
+
+    $("#web_title").click(function () {
+        location.href = "/view/index";
+    });
+
+    $("#refreash_log_status").click(function () {
+        if(localStorage.getItem("token") == null) {
+            $("#unlogged").show();
+            alert("没有缓存您的登录信息，请登录");
+        }else{
+            $("#logged").show();
+            if(localStorage.getItem("nickname") !=null){
+                $("#logged").append("<a>欢迎你，"+localStorage.getItem("nickname")+"<a>");
+                $("#logged").append("<button id='logout'>登出</button><br>");
+                $("#logout").click(function () {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("nickname");
+                    localStorage.removeItem("biscuit_id");
+                    $("#logged").hide();
+                    $("#unlogged").show();
+                    location.reload();
+                });
+            }
+            if(localStorage.getItem("biscuit_id") !=null) {
+                $("#logged").append("<a>当前饼干："+localStorage.getItem("biscuit_id")+"</a><br>");
+            }
+            $("#logged").append("<a href=\"/view/biscuit\" style='font-size: 20px'>饼干管理</a>")
+            $("#unlogged").hide();
+        }
+    });
+
+    $("#biscuit_list tbody").on("click", "button", function() {
+        var id = this.id;
+        var biscuitId;
+        if (id.startsWith('set_biscuit_')) {
+            biscuitId = id.replace('set_biscuit_', '');
+            // 在这里，你可以使用 biscuitId 来执行你想要的操作
+            console.log('设为当前饼干的id是：' + biscuitId);
+            $.ajax({
+                url: "/api/biscuit/switch?biscuit_id=" + biscuitId,
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    'Authorization': localStorage.getItem("token")
+                },
+                success: function(data) {
+                    console.log(data);
+                    if (data.code !== 200) {
+                        $("#errmsg").text(data.msg);
+                    } else {
+                        localStorage.setItem("biscuit_id", biscuitId);
+                        location.reload();
+                    }
+                },
+                error: function(data) {
+                    console.log(data);
+                    $("#errmsg").text(data.msg);
+                }
+
+            })
+        }else if (id.startsWith('delete_biscuit_')) {
+            biscuitId = id.replace('delete_biscuit_', '');
+            // 在这里，你可以使用 biscuitId 来执行你想要的操作
+            console.log('删除饼干的id是：' + biscuitId);
+            $.ajax({
+                url: "/api/biscuit/delete?biscuit_id=" + biscuitId,
+                type: "DELETE",
+                contentType: "application/json; charset=utf-8",
+                headers: {
+                    'Authorization': localStorage.getItem("token")
+                },
+                success: function(data) {
+                    console.log(data);
+                    if (data.code !== 200) {
+                        $("#errmsg").text(data.msg);
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function(data) {
+                    console.log(data);
+                    $("#errmsg").text(data.msg);
+                }
+
+            })
+        }
+    });
+</script>
+
+<style>
+    /*#web_title.hover{*/
+    /*    cursor: pointer;*/
+    /*}*/
+    .bordered{
+        border: 1px solid black;
+        padding: 5px;
+        margin: 5px;
+    }
+
+    #biscuit_list{
+        padding: 20px;
+    }
+    #biscuit_row{
+        border: 1px solid black;
+        font-size: 20px;
+        padding: 10px;
+    }
+    #get_new_biscuit{
+        width: 20%;
+        font-size: 20px;
+    }
+    .delete_biscuit{
+        background-color: #ea1632;
+        cursor: pointer;
+    }
+    .delete_biscuit:hover{
+        background-color: #b00f26;
+    }
+    #logout {
+        background-color: #ea1632;
+        cursor: pointer;
+    }
+    #logout:hover {
+        background-color: #b00f26;
+    }
+    button{
+        font-size: 20px;
+        width: 100%;
+        border-radius: 5px;
+        border: none;
+        color: #fff;
+        background-color: #007BFF;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</body>
+</html>

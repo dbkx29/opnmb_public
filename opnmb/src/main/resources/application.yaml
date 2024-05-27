@@ -1,0 +1,50 @@
+server:
+  port: 5438
+
+spring:
+  application:
+    name: opnmb
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: //username
+    password: //password
+    url: //url
+    hikari:
+      minimum-idle: 3
+      maximum-pool-size: 10
+      max-lifetime: 30000   #不能小于30秒，否则默认回到1800秒
+  mail:
+    host: smtp.qq.com # 发送邮件的服务器地址
+    username: //mail
+    password: //授权码
+    default-encoding: utf-8
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  # 配置thymeleaf的相关信息
+  thymeleaf:
+    # 开启视图解析
+    enabled: true
+    #编码格式
+    encoding: UTF-8
+    #前缀配置
+    prefix: classpath:/templates/
+    # 后缀配置
+    suffix: .html
+    #是否使用缓存 开发环境时不设置缓存
+    cache: false
+    # 格式为 HTML 格式
+    mode: HTML
+    # 配置类型
+    servlet:
+      content-type: text/html
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: icu.dbkx.opnmb.generator.entity
+  configuration:
+    map-underscore-to-camel-case: false
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+  level:
+    icu.dbkx.opnmb.controller.api: trace

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="icu.dbkx.opnmb.generator.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="icu.dbkx.opnmb.generator.entity.User">
+            <id property="user_id" column="user_id" jdbcType="INTEGER"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+            <result property="biscuit_id" column="biscuit_id" jdbcType="VARCHAR"/>
+            <result property="personal_note" column="personal_note" jdbcType="VARCHAR"/>
+            <result property="sex" column="sex" jdbcType="VARCHAR"/>
+            <result property="avatar" column="avatar" jdbcType="VARCHAR"/>
+            <result property="register_date" column="register_date" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="notes" column="notes" jdbcType="VARCHAR"/>
+            <result property="captcha" column="captcha" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        user_id,password,email,
+        nickname,biscuit_id,token,personal_note,
+        sex,avatar,register_date,
+        status,notes,captcha
+    </sql>
+</mapper>
